@@ -35,14 +35,17 @@ namespace IamDontKnowAsync
 
                 var response = new byte[1 * 1024 * 1024];
 
-                var received = socket.Receive(response, 0, response.Length, SocketFlags.None);
+                socket.BeginReceive(response, 0, response.Length, SocketFlags.None, asyncResult2 =>
+                {
+                    var received = socket.EndReceive(asyncResult2);
 
-                Console.WriteLine($"Response received: {received}");
-                Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
+                    Console.WriteLine($"Response received: {received}");
+                    Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                socket.Disconnect(false);
+                    socket.Disconnect(false);
                 
-                Console.WriteLine("Disconnected");
+                    Console.WriteLine("Disconnected");
+                }, null);
             }, null);
         }
     }
