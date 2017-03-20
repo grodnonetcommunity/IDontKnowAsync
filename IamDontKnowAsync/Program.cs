@@ -10,6 +10,8 @@ namespace IamDontKnowAsync
         static void Main()
         {
             MakeRequest();
+
+            Console.ReadLine();
         }
 
         public static void MakeRequest()
@@ -25,20 +27,23 @@ namespace IamDontKnowAsync
                           "Accept: text/html\r\n\r\n";
 
             var buffer = Encoding.ASCII.GetBytes(request);
-            var sended = socket.Send(buffer, 0, buffer.Length, SocketFlags.None);
+            socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, asyncResult1 =>
+            {
+                var sended = socket.EndSend(asyncResult1);
 
-            Console.WriteLine($"Request sended: {sended}");
+                Console.WriteLine($"Request sended: {sended}");
 
-            var response = new byte[1 * 1024 * 1024];
+                var response = new byte[1 * 1024 * 1024];
 
-            var received = socket.Receive(response, 0, response.Length, SocketFlags.None);
+                var received = socket.Receive(response, 0, response.Length, SocketFlags.None);
 
-            Console.WriteLine($"Response received: {received}");
-            Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
+                Console.WriteLine($"Response received: {received}");
+                Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-            socket.Disconnect(false);
-
-            Console.WriteLine("Disconnected");
+                socket.Disconnect(false);
+                
+                Console.WriteLine("Disconnected");
+            }, null);
         }
     }
 }
