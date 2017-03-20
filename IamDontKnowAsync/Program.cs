@@ -29,7 +29,16 @@ namespace IamDontKnowAsync
 
             Console.WriteLine($"Request sended: {sended}");
 
+            var response = new byte[1 * 1024 * 1024];
+
+            var received = socket.Receive(response, 0, response.Length, SocketFlags.None);
+
+            Console.WriteLine($"Response received: {received}");
+            Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
+
             socket.Disconnect(false);
+
+            Console.WriteLine("Disconnected");
         }
     }
 }
