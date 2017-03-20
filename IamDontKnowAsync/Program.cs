@@ -42,9 +42,12 @@ namespace IamDontKnowAsync
                     Console.WriteLine($"Response received: {received}");
                     Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                    socket.Disconnect(false);
-                
-                    Console.WriteLine("Disconnected");
+                    socket.BeginDisconnect(false, asyncResult3 =>
+                    {
+                        socket.EndDisconnect(asyncResult3);
+
+                        Console.WriteLine("Disconnected");
+                    }, null);
                 }, null);
             }, null);
         }
