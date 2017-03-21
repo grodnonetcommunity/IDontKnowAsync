@@ -20,10 +20,9 @@ namespace IamDontKnowAsync
 
             const string host = "localhost";
             
-            socket.BeginConnect(new DnsEndPoint(host, 80), asyncResult0 =>
+            var args0 = new SocketAsyncEventArgs{ RemoteEndPoint = new DnsEndPoint(host, 80) };
+            args0.Completed += (s0, a0) =>
             {
-                socket.EndConnect(asyncResult0);
-
                 var request = $"GET http://{host}/ HTTP/1.1\r\n" +
                               "Host: localhost\r\n" +
                               "Accept: text/html\r\n\r\n";
@@ -52,7 +51,8 @@ namespace IamDontKnowAsync
                         }, null);
                     }, null);
                 }, null);
-            }, null);
+            };
+            socket.ConnectAsync(args0);
         }
     }
 }
