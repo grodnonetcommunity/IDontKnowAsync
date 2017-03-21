@@ -28,29 +28,35 @@ namespace IamDontKnowAsync
                               "Accept: text/html\r\n\r\n";
 
                 var buffer = Encoding.ASCII.GetBytes(request);
-                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, asyncResult1 =>
+                var args1 = new SocketAsyncEventArgs();
+                args1.SetBuffer(buffer, 0, buffer.Length);
+                args1.Completed += (s1, a1) =>
                 {
-                    var sended = socket.EndSend(asyncResult1);
+                    var sended = a1.BytesTransferred;
 
                     Console.WriteLine($"Request sended: {sended}");
 
                     var response = new byte[1 * 1024 * 1024];
 
-                    socket.BeginReceive(response, 0, response.Length, SocketFlags.None, asyncResult2 =>
+                    var args2 = new SocketAsyncEventArgs();
+                    args2.SetBuffer(response, 0, response.Length);
+                    args2.Completed += (s2, a2) =>
                     {
-                        var received = socket.EndReceive(asyncResult2);
+                        var received = a2.BytesTransferred;
 
                         Console.WriteLine($"Response received: {received}");
                         Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                        socket.BeginDisconnect(false, asyncResult3 =>
+                        var args3 = new SocketAsyncEventArgs {DisconnectReuseSocket = false};
+                        args3.Completed += (s3, a3) =>
                         {
-                            socket.EndDisconnect(asyncResult3);
-
-                            Console.WriteLine("Disconnected");                        
-                        }, null);
-                    }, null);
-                }, null);
+                            Console.WriteLine("Disconnected");
+                        };
+                        socket.DisconnectAsync(args3);
+                    };
+                    socket.ReceiveAsync(args2);
+                };
+                socket.SendAsync(args1);
             };
             socket.ConnectAsync(args0);
         }
