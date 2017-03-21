@@ -31,33 +31,30 @@ namespace IamDontKnowAsync
                                   "Accept: text/html\r\n\r\n";
 
                     var buffer = Encoding.ASCII.GetBytes(request);
-                    return socket.SendTask(buffer, 0, buffer.Length, TaskCreationOptions.AttachedToParent);
+                    return socket.SendTask(buffer, 0, buffer.Length);
                 })
+                .Unwrap()
                 .ContinueWith(r1 =>
                 {
-                    Console.WriteLine($"Send Task status: {r1.Result.Status}");
-
-                    var sended = r1.Result.Result;
+                    var sended = r1.Result;
 
                     Console.WriteLine($"Request sended: {sended}");
 
-                    return socket.ReceivedTask(response, 0, response.Length, TaskCreationOptions.AttachedToParent);
+                    return socket.ReceivedTask(response, 0, response.Length);
                 })
+                .Unwrap()
                 .ContinueWith(r2 =>
                 {
-                    Console.WriteLine($"Receive Task status: {r2.Result.Status}");
-
-                    var received = r2.Result.Result;
+                    var received = r2.Result;
 
                     Console.WriteLine($"Response received: {received}");
                     Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                    return socket.DisconnectTask(false, TaskCreationOptions.AttachedToParent);
+                    return socket.DisconnectTask(false);
                 })
+                .Unwrap()
                 .ContinueWith(r3 =>
                 {
-                    Console.WriteLine($"Disconnect Task status: {r3.Result.Status}");
-
                     Console.WriteLine("Disconnected");
                 });
         }
