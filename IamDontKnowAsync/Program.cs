@@ -2,6 +2,7 @@
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading.Tasks;
 
 namespace IamDontKnowAsync
 {
@@ -18,8 +19,10 @@ namespace IamDontKnowAsync
         {
             var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
 
-            const string host = "localhost";
-            
+            var response = new byte[1 * 1024 * 1024];
+
+            const string host = "microsoft.com";
+
             socket.ConnectTask(new DnsEndPoint(host, 80))
                 .ContinueWith(r0 =>
                 {
@@ -28,30 +31,28 @@ namespace IamDontKnowAsync
                                   "Accept: text/html\r\n\r\n";
 
                     var buffer = Encoding.ASCII.GetBytes(request);
-                    socket.SendTask(buffer, 0, buffer.Length)
-                        .ContinueWith(r1 =>
-                        {
-                            var sended = r1.Result;
+                    return socket.SendTask(buffer, 0, buffer.Length);
+                })
+                .ContinueWith(r1 =>
+                {
+                    var sended = r1.Result.Result;
 
-                            Console.WriteLine($"Request sended: {sended}");
+                    Console.WriteLine($"Request sended: {sended}");
 
-                            var response = new byte[1 * 1024 * 1024];
+                    return socket.ReceivedTask(response, 0, response.Length);
+                })
+                .ContinueWith(r2 =>
+                {
+                    var received = r2.Result.Result;
 
-                            socket.ReceivedTask(response, 0, response.Length)
-                                .ContinueWith(r2 =>
-                                {
-                                    var received = r2.Result;
+                    Console.WriteLine($"Response received: {received}");
+                    Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                                    Console.WriteLine($"Response received: {received}");
-                                    Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
-
-                                    socket.DisconnectTask(false)
-                                        .ContinueWith(r3 =>
-                                        {
-                                            Console.WriteLine("Disconnected");
-                                        });
-                                });
-                        });
+                    return socket.DisconnectTask(false);
+                })
+                .ContinueWith(r3 =>
+                {
+                    Console.WriteLine("Disconnected");
                 });
         }
     }
