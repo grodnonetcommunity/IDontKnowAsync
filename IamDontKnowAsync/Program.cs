@@ -29,7 +29,7 @@ namespace IamDontKnowAsync
                                   "Accept: text/html\r\n\r\n";
 
                     var buffer = Encoding.ASCII.GetBytes(request);
-                    return socket.SendTask(buffer, 0, buffer.Length);
+                    return socket.SendTask(buffer, 0, buffer.Length, TaskCreationOptions.AttachedToParent);
                 })
                 .ContinueWith(r1 =>
                 {
@@ -41,7 +41,7 @@ namespace IamDontKnowAsync
 
                     var response = new byte[1 * 1024 * 1024];
                     return socket.ReceivedTask(response, 0, response.Length)
-                        .ContinueWith(r => (response, received: r.Result));
+                        .ContinueWith(r => (response, received: r.Result), TaskContinuationOptions.AttachedToParent);
                 })
                 .ContinueWith(r2 =>
                 {
@@ -52,7 +52,7 @@ namespace IamDontKnowAsync
                     Console.WriteLine($"Response received: {received}");
                     Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
 
-                    return socket.DisconnectTask(false);
+                    return socket.DisconnectTask(false, TaskCreationOptions.AttachedToParent);
                 })
                 .ContinueWith(r3 =>
                 {
