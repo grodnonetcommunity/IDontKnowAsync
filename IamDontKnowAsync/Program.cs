@@ -35,6 +35,8 @@ namespace IamDontKnowAsync
                 })
                 .ContinueWith(r1 =>
                 {
+                    Console.WriteLine($"Send Task status: {r1.Result.Status}");
+
                     var sended = r1.Result.Result;
 
                     Console.WriteLine($"Request sended: {sended}");
@@ -43,6 +45,8 @@ namespace IamDontKnowAsync
                 })
                 .ContinueWith(r2 =>
                 {
+                    Console.WriteLine($"Receive Task status: {r2.Result.Status}");
+
                     var received = r2.Result.Result;
 
                     Console.WriteLine($"Response received: {received}");
@@ -52,6 +56,8 @@ namespace IamDontKnowAsync
                 })
                 .ContinueWith(r3 =>
                 {
+                    Console.WriteLine($"Disconnect Task status: {r3.Result.Status}");
+
                     Console.WriteLine("Disconnected");
                 });
         }
