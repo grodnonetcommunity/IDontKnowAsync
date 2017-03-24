@@ -11,11 +11,7 @@ namespace WpfAsync
         public MainWindow()
         {
             InitializeComponent();
-
-            DataContext = ViewModel = new MainViewModel();
         }
-
-        public MainViewModel ViewModel { get; }
 
         private async void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
         {
@@ -25,11 +21,11 @@ namespace WpfAsync
 
                 var result = await MakeCall();
 
-                ViewModel.Result = $"{result.Substring(0, 30)} in {stopwatch.ElapsedMilliseconds} ms";
+                ResultTextBox.Text = $"{result.Substring(0, 30)} in {stopwatch.ElapsedMilliseconds} ms";
             }
             catch (Exception exception)
             {
-                ViewModel.Result = exception.ToString();
+                ResultTextBox.Text = exception.ToString();
             }
         }
 
