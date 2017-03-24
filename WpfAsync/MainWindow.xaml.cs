@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Diagnostics;
 using System.Net.Http;
+using System.Threading.Tasks;
 using System.Windows;
 
 namespace WpfAsync
@@ -18,18 +19,11 @@ namespace WpfAsync
 
         private async void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
         {
-            var client = new HttpClient
-            {
-                Timeout = TimeSpan.FromSeconds(5)
-            };
-
             try
             {
                 var stopwatch = Stopwatch.StartNew();
 
-                var request = new HttpRequestMessage(HttpMethod.Get, "http://google.com");
-                var response = await client.SendAsync(request);
-                var result = await response.Content.ReadAsStringAsync();
+                var result = await MakeCall();
 
                 ViewModel.Result = $"{result.Substring(0, 30)} in {stopwatch.ElapsedMilliseconds} ms";
             }
@@ -37,6 +31,18 @@ namespace WpfAsync
             {
                 ViewModel.Result = exception.ToString();
             }
+        }
+
+        private static async Task<string> MakeCall()
+        {
+            var client = new HttpClient
+            {
+                Timeout = TimeSpan.FromSeconds(5)
+            };
+
+            var request = new HttpRequestMessage(HttpMethod.Get, "http://google.com");
+            var response = await client.SendAsync(request);
+            return await response.Content.ReadAsStringAsync();
         }
     }
 }
