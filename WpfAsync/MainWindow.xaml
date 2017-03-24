@@ -16,6 +16,6 @@
         
         <Button Grid.Row="0" VerticalAlignment="Center" HorizontalAlignment="Center" Content="Make it Beautiful" Click="MakeItBeautifulOnClick"/>
         
-        <TextBlock Grid.Row="1" HorizontalAlignment="Center" Text="{Binding Result}"/>
+        <TextBlock Name="ResultTextBox" Grid.Row="1" HorizontalAlignment="Center" Text="{Binding Result}"/>
     </Grid>
 </Window>
