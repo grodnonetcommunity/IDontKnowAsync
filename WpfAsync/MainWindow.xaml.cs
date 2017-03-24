@@ -41,8 +41,8 @@ namespace WpfAsync
             };
 
             var request = new HttpRequestMessage(HttpMethod.Get, "http://google.com");
-            var response = await client.SendAsync(request);
-            return await response.Content.ReadAsStringAsync();
+            var response = await client.SendAsync(request).ConfigureAwait(false);
+            return await response.Content.ReadAsStringAsync().ConfigureAwait(false);
         }
     }
 }
