@@ -16,7 +16,7 @@ namespace WpfAsync
 
         public MainViewModel ViewModel { get; }
 
-        private void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
+        private async void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
         {
             var client = new HttpClient
             {
@@ -28,14 +28,14 @@ namespace WpfAsync
                 var stopwatch = Stopwatch.StartNew();
 
                 var request = new HttpRequestMessage(HttpMethod.Get, "http://google.com");
-                var response = client.SendAsync(request).Result;
-                var result = response.Content.ReadAsStringAsync().Result;
+                var response = await client.SendAsync(request);
+                var result = await response.Content.ReadAsStringAsync();
 
                 ViewModel.Result = $"{result.Substring(0, 30)} in {stopwatch.ElapsedMilliseconds} ms";
             }
-            catch (AggregateException exception)
+            catch (Exception exception)
             {
-                ViewModel.Result = exception.InnerException?.Message ?? exception.ToString();
+                ViewModel.Result = exception.ToString();
             }
         }
     }
