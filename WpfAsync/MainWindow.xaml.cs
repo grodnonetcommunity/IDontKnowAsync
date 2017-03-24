@@ -17,13 +17,13 @@ namespace WpfAsync
 
         public MainViewModel ViewModel { get; }
 
-        private void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
+        private async void MakeItBeautifulOnClick(object sender, RoutedEventArgs e)
         {
             try
             {
                 var stopwatch = Stopwatch.StartNew();
 
-                var result = MakeCall().Result;
+                var result = await MakeCall();
 
                 ViewModel.Result = $"{result.Substring(0, 30)} in {stopwatch.ElapsedMilliseconds} ms";
             }
