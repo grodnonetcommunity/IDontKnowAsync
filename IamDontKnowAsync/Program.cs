@@ -9,11 +9,14 @@ namespace IamDontKnowAsync
         static void Main()
         {
             var makeRequestTask = MakeRequest();
-            try
-            {
-                makeRequestTask.Wait();
-            }
-            catch { }
+            Task.WaitAny(
+                makeRequestTask.ContinueWith(t => Console.WriteLine("Completed"),
+                    TaskContinuationOptions.OnlyOnRanToCompletion),
+                makeRequestTask.ContinueWith(t => Console.WriteLine("Faulted"),
+                    TaskContinuationOptions.OnlyOnFaulted),
+                makeRequestTask.ContinueWith(t => Console.WriteLine("Canceled"),
+                    TaskContinuationOptions.OnlyOnCanceled)
+            );
 
             Console.WriteLine(makeRequestTask.Status);
         }
