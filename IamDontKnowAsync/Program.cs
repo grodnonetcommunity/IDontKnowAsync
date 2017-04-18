@@ -29,14 +29,15 @@ namespace IamDontKnowAsync
                 cancelationTokenSource.Cancel();
             });
 
-            return Task.Factory.StartNew(() =>
+            return Task.Factory.StartNew(async () =>
             {
                 for (var i = 0; i < 100; i++)
                 {
-                    Thread.Sleep(100);
+                    await Task.Delay(100);
                     cancelationToken.ThrowIfCancellationRequested();
                 }
-            }, new CancellationToken());
+            }, new CancellationToken())
+            .Unwrap();
         }
     }
 }
