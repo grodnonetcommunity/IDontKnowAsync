@@ -1,7 +1,6 @@
 ﻿using System;
-using System.Net;
-using System.Net.Sockets;
-using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
 
 namespace IamDontKnowAsync
 {
@@ -9,37 +8,35 @@ namespace IamDontKnowAsync
     {
         static void Main()
         {
-            MakeRequest();
+            var makeRequestTask = MakeRequest();
+            try
+            {
+                makeRequestTask.Wait();
+            }
+            catch { }
 
-            Console.ReadLine();
+            Console.WriteLine(makeRequestTask.Status);
         }
 
-        public static async void MakeRequest()
+        private static Task MakeRequest()
         {
-            var socket = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.IP);
+            var cancelationTokenSource = new CancellationTokenSource();
+            var cancelationToken = cancelationTokenSource.Token;
 
-            const string host = "localhost";
+            Task.Factory.StartNew(() =>
+            {
+                Thread.Sleep(3000);
+                cancelationTokenSource.Cancel();
+            });
 
-            await socket.ConnectTask(new DnsEndPoint(host, 80));
-            var request = $"GET http://{host}/ HTTP/1.1\r\n" +
-                          "Host: localhost\r\n" +
-                          "Accept: text/html\r\n\r\n";
-
-            var buffer = Encoding.ASCII.GetBytes(request);
-            var sended = await socket.SendTask(buffer, 0, buffer.Length);
-
-            Console.WriteLine($"Request sended: {sended}");
-
-            var response = new byte[1 * 1024 * 1024];
-
-            var received = await socket.ReceivedTask(response, 0, response.Length);
-
-            Console.WriteLine($"Response received: {received}");
-            Console.WriteLine(Encoding.UTF8.GetString(response, 0, received));
-
-            await socket.DisconnectTask(false);
-
-            Console.WriteLine("Disconnected");
+            return Task.Factory.StartNew(() =>
+            {
+                for (var i = 0; i < 100; i++)
+                {
+                    Thread.Sleep(100);
+                    cancelationToken.ThrowIfCancellationRequested();
+                }
+            }, cancelationToken);
         }
     }
 }
