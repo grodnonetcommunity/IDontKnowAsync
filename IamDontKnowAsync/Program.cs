@@ -36,7 +36,7 @@ namespace IamDontKnowAsync
                     Thread.Sleep(100);
                     cancelationToken.ThrowIfCancellationRequested();
                 }
-            }, cancelationToken);
+            }, new CancellationToken());
         }
     }
 }
