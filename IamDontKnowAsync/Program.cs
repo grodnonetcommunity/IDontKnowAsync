@@ -28,9 +28,11 @@ namespace IamDontKnowAsync
 
         public static async Task MakeRequest()
         {
-            var s1 = GetBuyRecomendation("http://google.com");
-            var s2 = GetBuyRecomendation("http://microsoft.com");
-            var s3 = GetBuyRecomendation("http://thomson-reuters.com");
+            var cancelationTokenSource = new CancellationTokenSource();
+
+            var s1 = GetBuyRecomendation("http://google.com", cancelationTokenSource.Token);
+            var s2 = GetBuyRecomendation("http://microsoft.com", cancelationTokenSource.Token);
+            var s3 = GetBuyRecomendation("http://thomson-reuters.com", cancelationTokenSource.Token);
 
             var recomendations = new List<Task<(string, bool)>> {s1, s2, s3};
 
@@ -44,6 +46,7 @@ namespace IamDontKnowAsync
                 {
                     (server, recommended) = await recomendation;
                     recomendations.Remove(recomendation);
+                    cancelationTokenSource.Cancel();
                     break;
                 }
                 catch (Exception e)
@@ -63,9 +66,9 @@ namespace IamDontKnowAsync
             Console.WriteLine($"{server} = {recommended} in {elapsed.TotalMilliseconds:F0}");
         }
 
-        public static async Task<(string server, bool recomended)> GetBuyRecomendation(string server)
+        public static async Task<(string server, bool recomended)> GetBuyRecomendation(string server, CancellationToken token)
         {
-            await Task.Delay(Rnd.Next(100, 1000));
+            await Task.Delay(Rnd.Next(100, 1000), token);
 
             if (server == "http://google.com")
             {
