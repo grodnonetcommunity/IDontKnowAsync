@@ -20,13 +20,9 @@ namespace IamDontKnowAsync
 
         private static Task MakeRequest()
         {
-            var cancelationTokenSource = new CancellationTokenSource();
-            var cancelationToken = cancelationTokenSource.Token;
-
             Task.Factory.StartNew(() =>
             {
                 Thread.Sleep(3000);
-                cancelationTokenSource.Cancel();
             });
 
             return Task.Factory.StartNew(async () =>
@@ -34,7 +30,7 @@ namespace IamDontKnowAsync
                 for (var i = 0; i < 100; i++)
                 {
                     await Task.Delay(100);
-                    cancelationToken.ThrowIfCancellationRequested();
+                    throw new TaskCanceledException();
                 }
             }, new CancellationToken())
             .Unwrap();
