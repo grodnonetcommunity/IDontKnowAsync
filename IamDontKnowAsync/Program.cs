@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Diagnostics;
 using System.Net;
 using System.Net.Sockets;
@@ -16,10 +17,10 @@ namespace IamDontKnowAsync
         {
             MakeRequest().Wait();
 
-            GC.Collect(2);
+            GC.Collect(GC.MaxGeneration);
             GC.WaitForPendingFinalizers();
 
-            GC.Collect(2);
+            GC.Collect(GC.MaxGeneration);
             GC.WaitForPendingFinalizers();
 
             Console.ReadLine();
@@ -31,8 +32,25 @@ namespace IamDontKnowAsync
             var s2 = GetBuyRecomendation("http://microsoft.com");
             var s3 = GetBuyRecomendation("http://thomson-reuters.com");
 
+            var recomendations = new List<Task<(string, bool)>> {s1, s2, s3};
+
             var stopwatch = Stopwatch.StartNew();
-            var (server, recommended) = await await Task.WhenAny(s1, s2, s3);
+            string server = null;
+            bool recommended = false;
+            while (recomendations.Count > 0)
+            {
+                var recomendation = await Task.WhenAny(recomendations);
+                try
+                {
+                    (server, recommended) = await recomendation;
+                    break;
+                }
+                catch (Exception e)
+                {
+                    Console.WriteLine(e.Message);
+                    recomendations.Remove(recomendation);
+                }
+            }
             var elapsed = stopwatch.Elapsed;
 
             Console.WriteLine($"{server} = {recommended} in {elapsed.TotalMilliseconds:F0}");
@@ -45,7 +63,7 @@ namespace IamDontKnowAsync
             if (server == "http://google.com")
             {
                 Console.WriteLine("Damn...");
-                throw new Exception("Web exception");
+                throw new Exception($"Web exception in {server}");
             }
 
             return (server: server, recomended: true);
