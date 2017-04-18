@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Runtime.ExceptionServices;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -6,6 +7,8 @@ namespace IamDontKnowAsync
 {
     class Program
     {
+        private static ExceptionDispatchInfo _dispatchInfo;
+
         static void Main()
         {
             var makeRequestTask = MakeRequest();
@@ -17,6 +20,13 @@ namespace IamDontKnowAsync
                 makeRequestTask.ContinueWith(t => Console.WriteLine("Canceled"),
                     TaskContinuationOptions.OnlyOnCanceled)
             );
+
+            Console.WriteLine("There are no exceptions");
+
+            if (makeRequestTask.IsCanceled)
+            {
+                _dispatchInfo.Throw();
+            }
 
             Console.WriteLine(makeRequestTask.Status);
         }
@@ -30,10 +40,19 @@ namespace IamDontKnowAsync
 
             return Task.Factory.StartNew(async () =>
             {
-                for (var i = 0; i < 100; i++)
+                try
                 {
-                    await Task.Delay(100);
-                    throw new TaskCanceledException();
+                    for (var i = 0; i < 100; i++)
+                    {
+                        await Task.Delay(100);
+
+                        throw new TaskCanceledException();
+                    }
+                }
+                catch (Exception e)
+                {
+                    _dispatchInfo = ExceptionDispatchInfo.Capture(e);
+                    throw;
                 }
             }, new CancellationToken())
             .Unwrap();
