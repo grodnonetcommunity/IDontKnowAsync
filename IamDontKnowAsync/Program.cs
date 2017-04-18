@@ -43,6 +43,7 @@ namespace IamDontKnowAsync
                 try
                 {
                     (server, recommended) = await recomendation;
+                    recomendations.Remove(recomendation);
                     break;
                 }
                 catch (Exception e)
@@ -52,6 +53,12 @@ namespace IamDontKnowAsync
                 }
             }
             var elapsed = stopwatch.Elapsed;
+
+            foreach (var recomendation in recomendations)
+            {
+                recomendation.ContinueWith(e => Console.WriteLine(e.Exception.InnerException.Message),
+                    TaskContinuationOptions.OnlyOnFaulted);
+            }
 
             Console.WriteLine($"{server} = {recommended} in {elapsed.TotalMilliseconds:F0}");
         }
