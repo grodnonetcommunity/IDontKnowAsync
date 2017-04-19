@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
@@ -28,55 +29,50 @@ namespace IamDontKnowAsync
 
         public static async Task MakeRequest()
         {
-            var cancelationTokenSource = new CancellationTokenSource();
+            var cancellationTokenSource = new CancellationTokenSource(3000);
+            var completion = new TaskCompletionSource<(string server, bool recommended)>();
 
-            var s1 = GetBuyRecomendation("http://google.com", cancelationTokenSource.Token);
-            var s2 = GetBuyRecomendation("http://microsoft.com", cancelationTokenSource.Token);
-            var s3 = GetBuyRecomendation("http://thomson-reuters.com", cancelationTokenSource.Token);
+            var urls = new[] {"http://google.com", "http://microsoft.com", "http://thomson-reuters.com"};
 
-            var recomendations = new List<Task<(string, bool)>> {s1, s2, s3};
+            var cancellationToken = cancellationTokenSource.Token;
+            var recomendations = urls
+                .Select(url => GetBuyRecomendation(url, cancellationToken)
+                    .ContinueWith(task => ProcessResult(task, completion, cancellationTokenSource)))
+                .ToList();
 
-            var stopwatch = Stopwatch.StartNew();
-            string server = null;
-            bool recommended = false;
-            while (recomendations.Count > 0)
+            #pragma warning disable 4014
+            Task.WhenAll(recomendations).ContinueWith(r => completion.TrySetResult((null, false)));
+            #pragma warning restore 4014
+
+            var (server, recommended) = await completion.Task;
+
+            Console.WriteLine($"{server} = {recommended}");
+        }
+
+        private static void ProcessResult(Task<(string server, bool recomended)> obj, TaskCompletionSource<(string server, bool recommended)> completion, CancellationTokenSource cancellationTokenSource)
+        {
+            if (obj.IsCanceled)
             {
-                var recomendation = await Task.WhenAny(recomendations);
-                try
-                {
-                    (server, recommended) = await recomendation;
-                    recomendations.Remove(recomendation);
-                    cancelationTokenSource.Cancel();
-                    break;
-                }
-                catch (Exception e)
-                {
-                    Console.WriteLine(e.Message);
-                    recomendations.Remove(recomendation);
-                }
+                Console.WriteLine("Canceled");
             }
-            var elapsed = stopwatch.Elapsed;
-
-            foreach (var recomendation in recomendations)
+            else if (obj.IsFaulted)
             {
-                recomendation.ContinueWith(e => Console.WriteLine(e.Exception.InnerException.Message),
-                    TaskContinuationOptions.OnlyOnFaulted);
+                Console.WriteLine(obj.Exception?.InnerException?.Message ?? "Faulted");
             }
-
-            Console.WriteLine($"{server} = {recommended} in {elapsed.TotalMilliseconds:F0}");
+            else
+            {
+                completion.TrySetResult(obj.Result);
+                cancellationTokenSource.Cancel();
+            }
         }
 
         public static async Task<(string server, bool recomended)> GetBuyRecomendation(string server, CancellationToken token)
         {
             await Task.Delay(Rnd.Next(100, 1000), token);
 
-            if (server == "http://google.com")
-            {
-                Console.WriteLine("Damn...");
-                throw new Exception($"Web exception in {server}");
-            }
-
-            return (server: server, recomended: true);
+            return server == "http://google.com"
+                ? throw new Exception($"Web exception in {server}")
+                : (server: server, recomended: true);
         }
     }
 }
